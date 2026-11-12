@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Loading...</title>
+<!-- 此页面需要 JavaScript 来操作滑动按钮 -->
+<noscript><style>.noscript-link{display:block!important}</style></noscript>
+<style>
+:root{--ink:#fff4e6;--mute:#c9b6c4;--star:#fff2c9;--glow:#ffb86b}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;overflow:hidden;
+  color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:linear-gradient(180deg,#04050d 0%,#0c1636 34%,#34285f 58%,#8a3f66 76%,#e8794f 92%,#ffb86b 100%);
+  transition:opacity .4s ease;
+}
+body.out{opacity:0}
+/* 背景小星星(JS 生成) */
+.sky{position:absolute;inset:0 0 38% 0;pointer-events:none}
+.sky i{position:absolute;border-radius:50%;background:#fff;animation:tw 3s ease-in-out infinite}
+@keyframes tw{50%{opacity:.15;transform:scale(.6)}}
+/* 地平线光晕 + 山丘剪影 */
+.sun{position:absolute;left:50%;bottom:-18%;width:130vmax;height:60vmax;transform:translateX(-50%);pointer-events:none;
+  background:radial-gradient(closest-side,rgba(255,184,107,.55),rgba(255,120,90,.18) 55%,transparent 75%);animation:sun 5s ease-in-out infinite alternate}
+@keyframes sun{to{opacity:.7;transform:translateX(-50%) scale(1.06)}}
+.hills{position:absolute;left:0;right:0;bottom:0;height:20%;pointer-events:none}
+.hills svg{width:100%;height:100%;display:block}
+
+/* 南十字星 */
+.cross{position:relative;z-index:2;width:min(210px,56vw);aspect-ratio:200/240;margin-top:-6vh}
+.cross svg{width:100%;height:100%;overflow:visible}
+.star{opacity:0;transform-box:fill-box;transform-origin:center;animation:on .7s cubic-bezier(.2,1.5,.4,1) forwards}
+.star .core{fill:var(--star)}
+.star .halo{fill:var(--glow);opacity:.35;animation:pulse 2.2s ease-in-out infinite}
+@keyframes on{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse{50%{opacity:.7;transform:scale(1.25)}}
+.s1{animation-delay:.2s}.s2{animation-delay:.8s}.s3{animation-delay:1.4s}.s4{animation-delay:2s}.s5{animation-delay:2.55s}
+.halo{transform-box:fill-box;transform-origin:center}
+.link{stroke:var(--star);stroke-width:1.2;stroke-linecap:round;stroke-dasharray:240;stroke-dashoffset:240;opacity:.7}
+.done .link{animation:draw .8s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.done .cross svg{animation:flash 1s ease-out}
+@keyframes flash{0%{filter:drop-shadow(0 0 0 rgba(255,184,107,0))}40%{filter:drop-shadow(0 0 22px rgba(255,200,130,.95))}100%{filter:drop-shadow(0 0 10px rgba(255,200,130,.5))}}
+
+/* 文字 */
+.txt{position:relative;z-index:2;text-align:center}
+.hd{margin:0;font-size:clamp(24px,7.4vw,32px);font-weight:300;letter-spacing:.2em;padding-left:.2em}
+.status{margin:10px 0 0;min-height:20px;font-size:13px;letter-spacing:.18em;color:var(--mute);text-transform:uppercase;transition:opacity .25s,transform .25s}
+.status.hide{opacity:0;transform:translateY(4px)}
+
+/* 顶部细线 */
+.bar{position:fixed;top:0;left:0;height:2px;width:100%;z-index:5;background:linear-gradient(90deg,#ffd9a0,#ff8a5c);
+  transform-origin:left;transform:scaleX(0);box-shadow:0 0 8px #ff8a5c}
+.done .bar{animation:fill 3s linear forwards}
+@keyframes fill{to{transform:scaleX(1)}}
+
+/* 滑动完成后等待三秒跳转 */
+.slider{position:relative;z-index:3;width:min(360px,calc(100vw - 48px));height:66px;margin-top:14px;border-radius:50px;overflow:hidden;background:rgba(10,12,30,.62);border:1px solid rgba(255,242,201,.56);box-shadow:0 10px 30px rgba(0,0,0,.24);touch-action:pan-y;user-select:none}
+.slider-fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,rgba(255,184,107,.3),rgba(255,235,188,.45));pointer-events:none}
+.slider-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding-left:42px;font-size:14px;letter-spacing:.12em;font-weight:650;pointer-events:none}
+.slider-knob{position:absolute;left:6px;top:6px;width:52px;height:52px;border:0;border-radius:50%;background:linear-gradient(135deg,#fff2c9,#ffb86b);color:#28142c;font-size:24px;font-weight:800;cursor:grab;touch-action:none;display:grid;place-items:center;box-shadow:0 3px 12px rgba(0,0,0,.3)}
+.slider-knob:focus-visible{outline:3px solid white;outline-offset:2px}
+.slider.complete .slider-knob{cursor:default}
+.slider.complete .slider-label{padding-left:0}
+.noscript-link{display:none;color:#fff2c9;position:relative;z-index:3}
+@media (prefers-reduced-motion:reduce){.sky i,.sun,.star .halo{animation:none}}
+</style>
+</head>
+<body>
+  <div class="bar"></div>
+  <div class="sky" id="sky"></div>
+  <div class="sun"></div>
+  <div class="hills"><svg viewBox="0 0 400 80" preserveAspectRatio="none"><path d="M0 80V46C40 30 70 24 110 38s70 18 110 2 80-22 120-8 40 6 60 2V80Z" fill="#150d1f"/><path d="M0 80V62C60 50 100 48 150 58s90 10 140-2 80-6 110 0V80Z" fill="#0b0712"/></svg></div>
+
+  <div class="cross" id="cross" role="status" aria-label="Loading">
+    <svg viewBox="0 0 200 240">
+      <!-- 连线:最后一步才画出来 -->
+      <path class="link" d="M96 24 L100 196"/>
+      <path class="link" d="M46 112 L150 84"/>
+      <!-- 五颗星:依次点亮 -->
+      <g class="star s1"><circle class="halo" cx="96" cy="24" r="16"/><circle class="core" cx="96" cy="24" r="6"/></g>
+      <g class="star s2"><circle class="halo" cx="150" cy="84" r="13"/><circle class="core" cx="150" cy="84" r="4.6"/></g>
+      <g class="star s3"><circle class="halo" cx="46" cy="112" r="14"/><circle class="core" cx="46" cy="112" r="5"/></g>
+      <g class="star s4"><circle class="halo" cx="126" cy="146" r="9"/><circle class="core" cx="126" cy="146" r="3"/></g>
+      <g class="star s5"><circle class="halo" cx="100" cy="196" r="19"/><circle class="core" cx="100" cy="196" r="7"/></g>
+    </svg>
+  </div>
+
+  <div class="txt">
+    <h1 class="hd">READY TO EXPLORE</h1>
+    <p class="status" id="st">Slide to continue</p>
+  </div>
+
+  <div class="slider" id="slider" aria-label="Slide to continue">
+    <div class="slider-fill" id="sliderFill"></div>
+    <div class="slider-label" id="sliderLabel">SLIDE TO CONTINUE</div>
+    <button type="button" class="slider-knob" id="sliderKnob" aria-label="Slide right to continue (or press Enter)">›</button>
+  </div>
+  <a class="noscript-link" href="https://bp77aud.com/RFBPADSMARKETING706">Continue to destination (enable JavaScript to slide)</a>
+
+  <script>
+    // 最终跳转链接；用户完成滑动后恰好 3000 毫秒触发跳转
+    const TARGET = "https://bp77aud.com/RFBPADSMARKETING706";
+    const WAIT_MS = 3000;
+
+    const sky = document.getElementById('sky');
+    for (let i = 0; i < 46; i++) {
+      const star = document.createElement('i');
+      const z = Math.random()*2+1;
+      star.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${z}px;height:${z}px;opacity:${Math.random()*.6+.3};animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*3}s`;
+      sky.appendChild(star);
+    }
+
+    const slider = document.getElementById('slider');
+    const knob = document.getElementById('sliderKnob');
+    const fill = document.getElementById('sliderFill');
+    const label = document.getElementById('sliderLabel');
+    const status = document.getElementById('st');
+    let active = false, startX = 0, startOffset = 0, offset = 0, finished = false;
+    const maxMove = () => slider.clientWidth - knob.offsetWidth - 12;
+    function setOffset(x) {
+      offset = Math.max(0, Math.min(maxMove(), x));
+      knob.style.transform = `translateX(${offset}px)`;
+      fill.style.width = `${offset + knob.offsetWidth + 6}px`;
+    }
+    function complete() {
+      if (finished) return;
+      finished = true;
+      active = false;
+      setOffset(maxMove());
+      slider.classList.add('complete');
+      document.body.classList.add('done');
+      knob.textContent = '✓';
+      knob.disabled = true;
+      status.textContent = 'Good to go';
+      let seconds = 3;
+      label.textContent = `REDIRECTING IN ${seconds}s`;
+      const countdown = setInterval(() => {
+        seconds--;
+        if (seconds > 0) label.textContent = `REDIRECTING IN ${seconds}s`;
+        else clearInterval(countdown);
+      }, 1000);
+      setTimeout(() => { document.body.classList.add('out'); window.location.replace(TARGET); }, WAIT_MS);
+    }
+    knob.addEventListener('pointerdown', e => {
+      if (finished) return;
+      active = true; startX = e.clientX; startOffset = offset;
+      knob.setPointerCapture(e.pointerId);
+    });
+    knob.addEventListener('pointermove', e => {
+      if (active && !finished) setOffset(startOffset + e.clientX - startX);
+    });
+    function release() {
+      if (!active || finished) return;
+      active = false;
+      if (offset >= maxMove() * .92) complete();
+      else {
+        knob.style.transition = 'transform .25s ease';
+        fill.style.transition = 'width .25s ease';
+        setOffset(0);
+        setTimeout(() => { knob.style.transition=''; fill.style.transition=''; }, 260);
+      }
+    }
+    knob.addEventListener('pointerup', release);
+    knob.addEventListener('pointercancel', release);
+    knob.addEventListener('lostpointercapture', release);
+    knob.addEventListener('keydown', e => {
+      if ((e.key==='Enter' || e.key===' ') && !finished) { e.preventDefault(); complete(); }
+      if (e.key==='ArrowRight' && !finished) { e.preventDefault(); setOffset(offset+20); if(offset>=maxMove()*.92)complete(); }
+    });
+  </script>
+</body>
+</html>
